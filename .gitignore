@@ -1,0 +1,13 @@
+.DS_Store
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+<<<<<<< HEAD
+=======
+../# detroit_bus_map.py
+../Motion/
+../detroit_bus_map.py
+../woodward_route.kml.geojson
+../computerscienceportfolio/
+>>>>>>> 2413d4c (Removed dirty subproject and updated ignore)
