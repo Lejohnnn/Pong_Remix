@@ -376,11 +376,9 @@ class Game:
         ar = self.arena
 
         # --- Paddle collisions ---
-        for pad in self.paddles:
-            pr = pad.get_rect()
-            if ball.rect().colliderect(pr):
-                self._bounce_off_paddle(ball, pad, pr)
-                return None
+        paddle_hit = self.handle_ball_paddle_collision(ball)
+        if paddle_hit:
+            return  # Don't check walls on same frame as paddle bounce
 
         # --- Wall / goal logic ---
         scored = False
@@ -419,35 +417,6 @@ class Game:
 
         return None
 
-    def _bounce_off_paddle(self, ball, pad, pr):
-        offset_ratio = 0.0
-        if pad.side == 'left':
-            ball.vx = abs(ball.vx) * 1.03
-            ball.x = pr.right + BALL_RADIUS + 1
-            offset_ratio = (ball.y - pr.centery) / (pr.height / 2)
-            ball.vy = offset_ratio * abs(ball.vx) * 1.2
-        elif pad.side == 'right':
-            ball.vx = -abs(ball.vx) * 1.03
-            ball.x = pr.left - BALL_RADIUS - 1
-            offset_ratio = (ball.y - pr.centery) / (pr.height / 2)
-            ball.vy = offset_ratio * abs(ball.vx) * 1.2
-        elif pad.side == 'top':
-            ball.vy = abs(ball.vy) * 1.03
-            ball.y = pr.bottom + BALL_RADIUS + 1
-            offset_ratio = (ball.x - pr.centerx) / (pr.width / 2)
-            ball.vx = offset_ratio * abs(ball.vy) * 1.2
-        elif pad.side == 'bottom':
-            ball.vy = -abs(ball.vy) * 1.03
-            ball.y = pr.top - BALL_RADIUS - 1
-            offset_ratio = (ball.x - pr.centerx) / (pr.width / 2)
-            ball.vx = offset_ratio * abs(ball.vy) * 1.2
-
-        # Cap speed
-        spd = math.hypot(ball.vx, ball.vy)
-        max_spd = BALL_SPEED_INIT * 2.2 * self.ball_speed_modifier
-        if spd > max_spd:
-            ball.vx *= max_spd / spd
-            ball.vy *= max_spd / spd
 
     def _score_against(self, loser_index):
         """Give a point to every player except the loser."""
@@ -570,6 +539,70 @@ class Game:
         surf.blit(txt, txt.get_rect(center=(WIDTH//2, HEIGHT//2 - 40)))
         sub = font.render("Press R to restart  |  Q to quit", True, WHITE)
         surf.blit(sub, sub.get_rect(center=(WIDTH//2, HEIGHT//2 + 30)))
+
+    def handle_ball_paddle_collision(self, ball):
+        """
+        Check if the ball is touching any paddle.
+        If so, bounce it and adjust the angle based on where it hit.
+        Returns True if a collision occurred, False otherwise.
+        """
+
+        for paddle in self.paddles:
+
+            # Detect Override 
+            # colliderect() returns True if the two rectangles share any pixels.
+            # If there's no overlap, skip this paddle entirely.
+            if ball.rect().colliderect(paddle.get_rect()):
+
+                # Gets paddle dimensions for bounce calculations
+                pr = paddle.get_rect() 
+
+                # Flip velocity + adjust angle ───────────────────────
+                # offset_ratio tells us WHERE on the paddle the ball hit.
+                #   0.0  = dead center  → ball goes straight
+                #   1.0  = top edge     → ball deflects sharply upward
+                #  -1.0  = bottom edge  → ball deflects sharply downward
+
+                if paddle.side == 'left':
+                    ball.vx = abs(ball.vx)           # always send ball rightward
+                    offset_ratio = (ball.y - pr.centery) / (pr.height / 2)
+                    ball.vy = offset_ratio * abs(ball.vx) * 1.2
+
+                    # ── Step 4: Push ball outside the paddle ──────────────────────
+                    # Without this, the ball stays inside the paddle rect and
+                    # triggers another collision on the very next frame (gets stuck).
+                    ball.x = pr.right + BALL_RADIUS + 1
+
+                elif paddle.side == 'right':
+                    ball.vx = -abs(ball.vx)          # always send ball leftward
+                    offset_ratio = (ball.y - pr.centery) / (pr.height / 2)
+                    ball.vy = offset_ratio * abs(ball.vx) * 1.2
+                    ball.x = pr.left - BALL_RADIUS - 1
+
+                elif paddle.side == 'top':
+                    ball.vy = abs(ball.vy)           # always send ball downward
+                    offset_ratio = (ball.x - pr.centerx) / (pr.width / 2)
+                    ball.vx = offset_ratio * abs(ball.vy) * 1.2
+                    ball.y = pr.bottom + BALL_RADIUS + 1
+
+                elif paddle.side == 'bottom':
+                    ball.vy = -abs(ball.vy)          # always send ball upward
+                    offset_ratio = (ball.x - pr.centerx) / (pr.width / 2)
+                    ball.vx = offset_ratio * abs(ball.vy) * 1.2
+                    ball.y = pr.top - BALL_RADIUS - 1
+
+                # ── Speed cap ──────────────────────────────────────────────────────
+                # Each bounce multiplies speed slightly (the 1.03 in original code).
+                # Without a cap the ball would get infinitely fast.
+                current_speed = math.hypot(ball.vx, ball.vy)
+                max_speed = BALL_SPEED_INIT * 2.2
+                if current_speed > max_speed:
+                    ball.vx *= max_speed / current_speed
+                    ball.vy *= max_speed / current_speed
+
+                return True  # collision occurred, stop checking
+        
+        return False  # no collision
 
 
 # ── Menu ──────────────────────────────────────────────────────────────────────
