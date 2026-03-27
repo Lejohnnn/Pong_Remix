@@ -226,7 +226,7 @@ class PowerUp:
             return
         alpha_factor = min(1.0, self.lifetime / 60)
         col = tuple(int(c * alpha_factor) for c in self.color)
-        glow_circle(surf, col, (self.x, self.y), POWERUP_RADIUS, radius=10)
+        glow_circle(surf, col, (self.x, self.y), POWERUP_RADIUS, radius=15)
         # rotating inner symbol
         symb_surf = font_small.render("★" if self.is_good else "▼", True, col)
         symb_surf = pygame.transform.rotate(symb_surf, self.angle)
@@ -378,43 +378,60 @@ class Game:
         # --- Paddle collisions ---
         paddle_hit = self.handle_ball_paddle_collision(ball)
         if paddle_hit:
-            return  # Don't check walls on same frame as paddle bounce
+            return None  # Don't check walls on same frame as paddle bounce
 
-        # --- Wall / goal logic ---
-        scored = False
-        # Left wall
-        if ball.x - BALL_RADIUS < ar.left:
-            if self.num_players >= 2 and self.paddles[0].side == 'left':
-                # Left paddle missed → everyone else gets a point
-                self._score_against(0)
+        # ── Goal / wall checks ────────────────────────────────────────────────
+        # For each side:
+        #   • If a player paddle defends that side → score when ball clears
+        #     the paddle's OUTER face (not the arena edge).
+        #   • If no paddle on that side → treat as a solid wall and bounce.
+
+        # 1. Find if a paddle defends this side
+        # 2. If yes → check if the ball has slipped past the paddle's outer face → score + kill the ball
+        # 3. If no paddle on this side → it's a solid wall → check against the arena edge and bounce 
+        # (abs(vx) forces the ball rightward regardless of which direction it was going, guaranteeing a clean bounce with no sticking)
+ 
+        # LEFT
+        pad_left = next((p for p in self.paddles if p.side == 'left'), None)
+        if pad_left:
+            # Score only once the ball has moved fully past the paddle's left edge
+            if ball.x - BALL_RADIUS < pad_left.get_rect().left:
+                self._score_against(pad_left.index)
                 return 'dead'
-            else:
+        else:
+            if ball.x - BALL_RADIUS < self.arena.left:
                 ball.vx = abs(ball.vx)
-        # Right wall
-        if ball.x + BALL_RADIUS > ar.right:
-            pad_right = next((p for p in self.paddles if p.side == 'right'), None)
-            if pad_right:
+ 
+        # RIGHT
+        pad_right = next((p for p in self.paddles if p.side == 'right'), None)
+        if pad_right:
+            if ball.x + BALL_RADIUS > pad_right.get_rect().right:
                 self._score_against(pad_right.index)
                 return 'dead'
-            else:
+        else:
+            if ball.x + BALL_RADIUS > self.arena.right:
                 ball.vx = -abs(ball.vx)
-        # Top wall
-        if ball.y - BALL_RADIUS < ar.top:
-            pad_top = next((p for p in self.paddles if p.side == 'top'), None)
-            if pad_top:
+ 
+        # TOP
+        pad_top = next((p for p in self.paddles if p.side == 'top'), None)
+        if pad_top:
+            if ball.y - BALL_RADIUS < pad_top.get_rect().top:
                 self._score_against(pad_top.index)
                 return 'dead'
-            else:
+        else:
+            if ball.y - BALL_RADIUS < self.arena.top:
                 ball.vy = abs(ball.vy)
-        # Bottom wall
-        if ball.y + BALL_RADIUS > ar.bottom:
-            pad_bot = next((p for p in self.paddles if p.side == 'bottom'), None)
-            if pad_bot:
+ 
+        # BOTTOM
+        pad_bot = next((p for p in self.paddles if p.side == 'bottom'), None)
+        if pad_bot:
+            if ball.y + BALL_RADIUS > pad_bot.get_rect().bottom:
                 self._score_against(pad_bot.index)
                 return 'dead'
-            else:
+        else:
+            if ball.y + BALL_RADIUS > self.arena.bottom:
                 ball.vy = -abs(ball.vy)
-
+ 
         return None
 
 
