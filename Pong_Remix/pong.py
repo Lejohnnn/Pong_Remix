@@ -24,7 +24,7 @@ import random
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 WIDTH, HEIGHT = 800, 800
-FPS = 60
+FPS = 70
 WINNING_SCORE = 7
 
 PADDLE_THICKNESS = 14
@@ -34,7 +34,7 @@ BALL_SPEED_INIT = 5.5
 BALL_RADIUS = 9
 
 POWERUP_RADIUS = 25
-POWERUP_SPAWN_INTERVAL = 420   # frames (~7 s)
+POWERUP_SPAWN_INTERVAL = 490   # frames (~7 s)
 POWERUP_LIFETIME = 360         # frames before it vanishes
 POWERUP_DURATION = 360         # frames the effect lasts
 
