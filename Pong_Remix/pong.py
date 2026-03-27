@@ -33,7 +33,7 @@ PADDLE_SPEED = 6
 BALL_SPEED_INIT = 5.5
 BALL_RADIUS = 9
 
-POWERUP_RADIUS = 14
+POWERUP_RADIUS = 25
 POWERUP_SPAWN_INTERVAL = 420   # frames (~7 s)
 POWERUP_LIFETIME = 360         # frames before it vanishes
 POWERUP_DURATION = 360         # frames the effect lasts
@@ -232,6 +232,9 @@ class PowerUp:
         symb_surf = pygame.transform.rotate(symb_surf, self.angle)
         surf.blit(symb_surf, symb_surf.get_rect(center=(self.x, self.y)))
 
+        label_surf = font_small.render(self.label, True, col)
+        surf.blit(label_surf, label_surf.get_rect(center=(self.x, self.y + POWERUP_RADIUS + 12)))
+
     def rect(self):
         return pygame.Rect(self.x - POWERUP_RADIUS, self.y - POWERUP_RADIUS,
                            POWERUP_RADIUS*2, POWERUP_RADIUS*2)
@@ -387,7 +390,7 @@ class Game:
         #   • If no paddle on that side → treat as a solid wall and bounce.
 
         # 1. Find if a paddle defends this side
-        # 2. If yes → check if the ball has slipped past the paddle's outer face → score + kill the ball
+        # 2. If yes -> check if the ball has slipped past the paddle's outer face -> score + kill the ball
         # 3. If no paddle on this side → it's a solid wall → check against the arena edge and bounce 
         # (abs(vx) forces the ball rightward regardless of which direction it was going, guaranteeing a clean bounce with no sticking)
  
