@@ -656,7 +656,7 @@ def draw_menu(surf, font_big, font, font_small, tick):
     ]
     y0 = 530
     for label, keys, col in lines:
-        lt = font_small.render(label, True, GREY)
+        lt = font_small.render(label, True, WHITE)
         kt = font_small.render(keys, True, col)
         surf.blit(lt, (220, y0))
         surf.blit(kt, (420, y0))
