@@ -7,8 +7,8 @@
 Controls:
   Player 1 (Left):   W / S
   Player 2 (Right):  UP / DOWN arrow
-  Player 3 (Bottom): A / D   (3-4 player mode)
-  Player 4 (Top):    LEFT / RIGHT arrow  (4 player mode)
+  Player 3 (Bottom): V / B   (3-4 player mode)
+  Player 4 (Top):    - / +  (4 player mode)
 
 Power-ups (GREEN):  bigger paddle | multi-ball | speed slow
 Power-downs (RED):  smaller paddle | speed boost
@@ -290,17 +290,17 @@ class Game:
     # Returns (paddle_index, direction) tuples for pressed keys
     KEYMAPS = {
         # P1 left
-        pygame.K_w:     (0, -1),
-        pygame.K_s:     (0, +1),
+        pygame.K_w:      (0, -1),
+        pygame.K_s:      (0, +1),
         # P2 right
-        pygame.K_UP:    (1, -1),
-        pygame.K_DOWN:  (1, +1),
-        # P3 bottom  (left/right on its wall = left/right keys for us)
-        pygame.K_a:     (2, -1),
-        pygame.K_d:     (2, +1),
+        pygame.K_UP:     (1, -1),
+        pygame.K_DOWN:   (1, +1),
+        # P3 bottom
+        pygame.K_v:      (2, -1),
+        pygame.K_b:      (2, +1),
         # P4 top
-        pygame.K_LEFT:  (3, -1),
-        pygame.K_RIGHT: (3, +1),
+        pygame.K_MINUS:  (3, -1),
+        pygame.K_EQUALS: (3, +1),  # the '+' key (unshifted '=')
     }
 
     def handle_input(self, keys):
@@ -651,8 +651,8 @@ def draw_menu(surf, font_big, font, font_small, tick):
     lines = [
         ("P1 (Left):", "W / S", CYAN),
         ("P2 (Right):", "↑ / ↓", MAGENTA),
-        ("P3 (Bottom):", "A / D", YELLOW),
-        ("P4 (Top):", "← / →", ORANGE),
+        ("P3 (Bottom):", "V / B", YELLOW),
+        ("P4 (Top):", "- / +", ORANGE),
     ]
     y0 = 530
     for label, keys, col in lines:
